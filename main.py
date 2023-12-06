@@ -89,7 +89,7 @@ big_bossY = random.randint(10, 150)
 big_bossX_change = 4
 big_bossY_change = 40
 big_boss_state = "ready"  # Set big_boss_state to "ready" initially
-big_boss_life = 15
+big_boss_life = 20
 
 
 def big_boss(x, y):
@@ -192,14 +192,14 @@ def isCollision(enemyX, enemyY, bulletX, bulletY):
 
 
 def new_game():
-    global running, score_value, playerX_change, num_of_enemies, bossX, bossY, boomX, boomY, boom_state, boom_life
-
+    global running, score_value, playerX_change, num_of_enemies
+    global bossX, bossY, boomX, boomY, boom_state, boom_life, big_bossX, big_bossY, big_boss_life, num_of_enemies
     score_value = 0
     playerX_change = 0
     mixer.music.load("audio/background.wav")
     mixer.music.play(-1)
     mixer.music.set_volume(0.5)
-
+    num_of_enemies = 7
     # Reset enemy positions
     for i in range(num_of_enemies):
         enemyX[i] = random.randint(0, 730)
@@ -208,10 +208,13 @@ def new_game():
     bossY = random.randint(10, 150)
     boomX = random.randint(0, 730)
     boomY = random.randint(10, 150)
+    big_bossX = random.randint(0, 730)
+    big_bossY = random.randint(10, 150)
     # Reset bullet state
     bullet_state = "ready"
     boom_state = "ready"
     boom_life = 3
+    big_boss_life = 20
 
     running = True
 
@@ -390,35 +393,36 @@ while running:
 
         enemy(enemyX[i], enemyY[i], i)
     # boss
-    if score_value % 10 == 0 and boss_state == "ready":
-        boss_state = "appear"
-        boss_life = 3  # Reset boss_life each time a new boss appears
-        bossY = 0
-    if bossY > 465 and bossY < 1000:
-        game_over()
-    if boss_state == "appear":
-        boss(bossX, bossY)
-        bossX += bossX_change
-        if bossX <= 0:
-            bossX_change = 2
-            bossY += bossY_change
-        elif bossX >= 730:
-            bossX_change = -2
-            bossY += bossY_change
+    if score_value > 0:
+        if score_value % 5 == 0 and boss_state == "ready":
+            boss_state = "appear"
+            boss_life = 3  # Reset boss_life each time a new boss appears
+            bossY = 0
+        if bossY > 465 and bossY < 1000:
+            game_over()
+        if boss_state == "appear":
+            boss(bossX, bossY)
+            bossX += bossX_change
+            if bossX <= 0:
+                bossX_change = 2
+                bossY += bossY_change
+            elif bossX >= 730:
+                bossX_change = -2
+                bossY += bossY_change
 
-        # Check for collision with boss
-        boss_collision = isCollision(bossX, bossY, bulletX, bulletY)
-        if boss_collision:
-            explosionSound = mixer.Sound("audio/beep.wav")
-            explosionSound.play()
-            bulletY = 500
-            bullet_state = "ready"
-            boss_life -= 1
-            if boss_life == 0:
-                score_value += 5
-                boss_state = "ready"
-                if score_value > highscore:
-                    highscore = score_value
+            # Check for collision with boss
+            boss_collision = isCollision(bossX, bossY, bulletX, bulletY)
+            if boss_collision:
+                explosionSound = mixer.Sound("audio/beep.wav")
+                explosionSound.play()
+                bulletY = 500
+                bullet_state = "ready"
+                boss_life -= 1
+                if boss_life == 0:
+                    score_value += 5
+                    boss_state = "ready"
+                    if score_value > highscore:
+                        highscore = score_value
     # boom
     if score_value > 0:
         if score_value % 10 == 0 and boom_state == "ready":
@@ -455,43 +459,46 @@ while running:
     if score_value > 0:
         if score_value % 50 == 0 and big_boss_state == "ready":
             big_boss_state = "appear"
-            big_boss_life = 15  # Reset big_boss_life each time a new big boss appears
+            big_boss_life = 20  # Reset big_boss_life each time a new big boss appears
             big_bossY = 0
             # Make all enemies and small boss disappear
             for i in range(num_of_enemies):
                 enemyY[i] = 2000
             bossY = 2000
-    if big_bossY > 465 and big_bossY < 1000:
-        game_over()
-    if big_boss_state == "appear":
-        big_boss(big_bossX, big_bossY)
-        big_bossX += big_bossX_change
-        if big_bossX <= 0:
-            big_bossX_change = 2
-            big_bossY += big_bossY_change
-        elif big_bossX >= 730:
-            big_bossX_change = -2
-            big_bossY += big_bossY_change
+        if big_bossY > 465 and big_bossY < 1000:
+            score_value = 0
+            game_over()
+        if big_boss_state == "appear":
+            big_boss(big_bossX, big_bossY)
+            big_bossX += big_bossX_change
+            if big_bossX <= 0:
+                big_bossX_change = 2
+                big_bossY += big_bossY_change
+            elif big_bossX >= 730:
+                big_bossX_change = -2
+                big_bossY += big_bossY_change
 
-        # Check for collision with big boss
-        bigbosscollision = big_boss_collision(big_bossX, big_bossY, bulletX, bulletY)
-        if bigbosscollision:
-            explosionSound = mixer.Sound("audio/beep.wav")
-            explosionSound.play()
-            bulletY = 500
-            bullet_state = "ready"
-            big_boss_life -= 1
-            if big_boss_life == 0:
-                score_value += 15
-                big_boss_state = "ready"
-                if score_value > highscore:
-                    highscore = score_value
-                # Make all enemies and small boss appear again
-                for i in range(num_of_enemies):
-                    enemyY[i] = random.randint(10, 150)
-                bossY = random.randint(10, 150)
-        hpbigboss = font.render("Hp: " + str(big_boss_life), True, (WHITE))
-        screen.blit(hpbigboss, (300, 10))
+            # Check for collision with big boss
+            bigbosscollision = big_boss_collision(
+                big_bossX, big_bossY, bulletX, bulletY
+            )
+            if bigbosscollision:
+                explosionSound = mixer.Sound("audio/beep.wav")
+                explosionSound.play()
+                bulletY = 500
+                bullet_state = "ready"
+                big_boss_life -= 1
+                if big_boss_life == 0:
+                    score_value += 15
+                    big_boss_state = "ready"
+                    if score_value > highscore:
+                        highscore = score_value
+                    # Make all enemies and small boss appear again
+                    for i in range(num_of_enemies):
+                        enemyY[i] = random.randint(10, 150)
+                    bossY = random.randint(10, 150)
+            hpbigboss = font.render("Hp: " + str(big_boss_life), True, (WHITE))
+            screen.blit(hpbigboss, (300, 10))
     # Bullet Movement
     if bulletY <= 0:
         bulletY = 500
