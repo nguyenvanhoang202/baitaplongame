@@ -82,6 +82,30 @@ def boss_collision(bossX, bossY, bulletX, bulletY):
         return False
 
 
+# Big Boss
+big_bossImg = pygame.image.load("image/big_boss.png")
+big_bossX = random.randint(0, 730)
+big_bossY = random.randint(10, 150)
+big_bossX_change = 4
+big_bossY_change = 40
+big_boss_state = "ready"  # Set big_boss_state to "ready" initially
+big_boss_life = 15
+
+
+def big_boss(x, y):
+    screen.blit(big_bossImg, (x, y))
+
+
+def big_boss_collision(big_bossX, big_bossY, bulletX, bulletY):
+    distance = math.sqrt(
+        math.pow(big_bossX - bulletX, 2) + (math.pow(big_bossY - bulletY, 2))
+    )
+    if distance < 35:
+        return True
+    else:
+        return False
+
+
 # Boom
 boomImg = pygame.image.load("image/boom.png")  # Load an image for the boom
 boomX = random.randint(0, 730)
@@ -336,7 +360,7 @@ while running:
 
     for i in range(num_of_enemies):
         # Game Over
-        if enemyY[i] > 465:
+        if enemyY[i] > 465 and enemyY[i] < 1000:
             for j in range(num_of_enemies):
                 enemyY[j] = 3000
             game_over()
@@ -349,7 +373,7 @@ while running:
             enemyX_change[i] = -2
             enemyY[i] += enemyY_change[i]
 
-        # Collision
+        # Collision enemy
         collision = isCollision(enemyX[i], enemyY[i], bulletX, bulletY)
         if collision:
             explosionSound = mixer.Sound("audio/beep.wav")
@@ -365,13 +389,12 @@ while running:
             speed_bullet()
 
         enemy(enemyX[i], enemyY[i], i)
-
-    if score_value % 15 == 0 and boss_state == "ready":
+    # boss
+    if score_value % 10 == 0 and boss_state == "ready":
         boss_state = "appear"
         boss_life = 3  # Reset boss_life each time a new boss appears
         bossY = 0
-    if bossY > 465:
-        bossY = 2000
+    if bossY > 465 and bossY < 1000:
         game_over()
     if boss_state == "appear":
         boss(bossX, bossY)
@@ -396,6 +419,7 @@ while running:
                 boss_state = "ready"
                 if score_value > highscore:
                     highscore = score_value
+    # boom
     if score_value > 0:
         if score_value % 10 == 0 and boom_state == "ready":
             boom_state = "appear"
@@ -427,6 +451,47 @@ while running:
             boom_life -= 1
             if boom_life == 0:
                 game_over()  # Game over when boom is hit 3 times
+    # bigboss
+    if score_value > 0:
+        if score_value % 50 == 0 and big_boss_state == "ready":
+            big_boss_state = "appear"
+            big_boss_life = 15  # Reset big_boss_life each time a new big boss appears
+            big_bossY = 0
+            # Make all enemies and small boss disappear
+            for i in range(num_of_enemies):
+                enemyY[i] = 2000
+            bossY = 2000
+    if big_bossY > 465 and big_bossY < 1000:
+        game_over()
+    if big_boss_state == "appear":
+        big_boss(big_bossX, big_bossY)
+        big_bossX += big_bossX_change
+        if big_bossX <= 0:
+            big_bossX_change = 2
+            big_bossY += big_bossY_change
+        elif big_bossX >= 730:
+            big_bossX_change = -2
+            big_bossY += big_bossY_change
+
+        # Check for collision with big boss
+        bigbosscollision = big_boss_collision(big_bossX, big_bossY, bulletX, bulletY)
+        if bigbosscollision:
+            explosionSound = mixer.Sound("audio/beep.wav")
+            explosionSound.play()
+            bulletY = 500
+            bullet_state = "ready"
+            big_boss_life -= 1
+            if big_boss_life == 0:
+                score_value += 15
+                big_boss_state = "ready"
+                if score_value > highscore:
+                    highscore = score_value
+                # Make all enemies and small boss appear again
+                for i in range(num_of_enemies):
+                    enemyY[i] = random.randint(10, 150)
+                bossY = random.randint(10, 150)
+        hpbigboss = font.render("Hp: " + str(big_boss_life), True, (WHITE))
+        screen.blit(hpbigboss, (300, 10))
     # Bullet Movement
     if bulletY <= 0:
         bulletY = 500
