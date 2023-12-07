@@ -7,12 +7,23 @@ from pygame import mixer
 # Intialize the pygame
 pygame.init()
 WHITE = (255, 255, 255)
+BACK = (0, 0, 0)
+RED = (205, 85, 85)
 # create the screen
 screen = pygame.display.set_mode((800, 600))
 
 # Background
 background = pygame.image.load("image/background.png")
 
+# Pause Background
+pause_background = pygame.image.load("image/pause.png")
+pause_background = pygame.transform.scale(pause_background, (800, 600))
+
+# Gameover Backgound
+gameover_background = pygame.image.load("image/gameover.png")
+
+# Main Menu Backgound
+mainmenu_background = pygame.image.load("image/mainmenu.png")
 # Sound
 mixer.music.load("audio/background.wav")
 mixer.music.set_volume(0.5)
@@ -100,7 +111,7 @@ def big_boss_collision(big_bossX, big_bossY, bulletX, bulletY):
     distance = math.sqrt(
         math.pow(big_bossX - bulletX, 2) + (math.pow(big_bossY - bulletY, 2))
     )
-    if distance < 35:
+    if distance < 40:
         return True
     else:
         return False
@@ -122,7 +133,7 @@ def boom(x, y):
 
 def bocollision(boomX, boomY, bulletX, bulletY):
     distance = math.sqrt(math.pow(boomX - bulletX, 2) + (math.pow(boomY - bulletY, 2)))
-    if distance < 35:
+    if distance < 30:
         return True
     else:
         return False
@@ -147,24 +158,30 @@ def speed_bullet():
         bulletY_change += 1
 
 
-font = pygame.font.Font("freesansbold.ttf", 32)
-fontp = pygame.font.Font("freesansbold.ttf", 20)
+font = pygame.font.Font("Pixeboy-z8XGD.ttf", 50)
+fontp = pygame.font.Font("Pixeboy-z8XGD.ttf", 35)
 
 textX = 10
 textY = 10
 # HighScore
 highscore = 0
 
-over_font = pygame.font.Font("freesansbold.ttf", 64)
+over_font = pygame.font.Font("Pixeboy-z8XGD.ttf", 90)
 
 
 def show_score(x, y):
     pause = fontp.render("Pause : P", True, (WHITE))
+    bdpause = fontp.render("Pause : P", True, (BACK))
+    screen.blit(bdpause, (x + 3, 47))
     screen.blit(pause, (x, 45))
     score = font.render("Score : " + str(score_value), True, (WHITE))
+    bdscore = font.render("Score : " + str(score_value), True, (BACK))
+    screen.blit(bdscore, (x + 3, y + 3))
     screen.blit(score, (x, y))
     score = font.render("High Score : " + str(highscore), True, (WHITE))
-    screen.blit(score, (500, y))
+    bdscore = font.render("High Score : " + str(highscore), True, (BACK))
+    screen.blit(bdscore, (403, y + 3))
+    screen.blit(score, (400, y))
 
 
 def player(x, y):
@@ -222,19 +239,23 @@ def new_game():
 def game_start():
     playSound = mixer.Sound("audio/intro.wav")
     playSound.play(-1)
-    global running
+    global running, mainmenu_background
     start = True
     while start:
-        background = pygame.image.load("image/background.png")
-        screen.fill((0, 0, 0))
-        # Background Image
-        screen.blit(background, (0, 0))
+        # Blit the main menu background image
+        screen.blit(mainmenu_background, (0, 0))
         namegame = over_font.render("Space Invaders", True, (WHITE))
-        screen.blit(namegame, (165, 150))
+        bdnamegame = over_font.render("Space Invaders", True, (BACK))
+        screen.blit(bdnamegame, (123, 173))
+        screen.blit(namegame, (120, 170))
         resume = font.render("Start: S", True, (WHITE))
-        screen.blit(resume, (335, 250))
+        bdresume = font.render("Start: S", True, (BACK))
+        screen.blit(bdresume, (323, 253))
+        screen.blit(resume, (320, 250))
         exitgame = font.render("Exit Game: ESC", True, (WHITE))
-        screen.blit(exitgame, (270, 300))
+        bdexitgame = font.render("Exit Game: ESC", True, (BACK))
+        screen.blit(bdexitgame, (263, 313))
+        screen.blit(exitgame, (260, 310))
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
@@ -254,15 +275,23 @@ def game_start():
 
 
 def game_pause():
-    global running
+    global running, pause_background
     paused = True
     while paused:
-        resume = font.render("Resume : P", True, (WHITE))
-        screen.blit(resume, (320, 200))
-        newgame = font.render("New Game : X", True, (WHITE))
+        # Blit the pause background image
+        screen.blit(pause_background, (0, 0))
+        resume = font.render("Resume: P", True, (WHITE))
+        bdresume = font.render("Resume: P", True, (BACK))
+        screen.blit(bdresume, (313, 203))
+        screen.blit(resume, (310, 200))
+        newgame = font.render("New Game: X", True, (WHITE))
+        bdnewgame = font.render("New Game: X", True, (BACK))
+        screen.blit(bdnewgame, (303, 303))
         screen.blit(newgame, (300, 300))
-        exitgame = font.render("Exit Game : ESC", True, (WHITE))
-        screen.blit(exitgame, (280, 400))
+        exitgame = font.render("Exit Game: ESC", True, (WHITE))
+        bdexitgame = font.render("Exit Game: ESC", True, (BACK))
+        screen.blit(bdexitgame, (263, 403))
+        screen.blit(exitgame, (260, 400))
         pygame.mixer.music.stop()
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
@@ -290,15 +319,24 @@ def game_over():
     overSound = mixer.Sound("audio/gameover.wav")
     pygame.time.delay(1500)
     overSound.play()
-    global running
+    global running, gameover_background
     over = True
     while over:
+        screen.blit(gameover_background, (0, 0))
         over_text = over_font.render("GAME OVER", True, (WHITE))
-        screen.blit(over_text, (200, 150))
+        bdover_text = over_font.render("GAME OVER", True, (BACK))
+        screen.blit(bdover_text, (243, 143))
+        screen.blit(over_text, (240, 140))
         over_text = font.render("Press the 'X' key to start again", True, (WHITE))
-        screen.blit(over_text, (170, 320))
-        over_text = font.render("High Score: " + str(highscore), True, (WHITE))
-        screen.blit(over_text, (285, 240))
+        bdover_text = font.render("Press the 'X' key to start again", True, (BACK))
+        screen.blit(bdover_text, (103, 323))
+        screen.blit(over_text, (100, 320))
+        over_text = font.render("High Score: " + str(highscore), True, (RED))
+        bdovertext = font.render("High Score: " + str(highscore), True, (WHITE))
+        bdover_text = font.render("High Score: " + str(highscore), True, (BACK))
+        screen.blit(bdover_text, (283, 243))
+        screen.blit(bdovertext, (281, 241))
+        screen.blit(over_text, (280, 240))
         pygame.mixer.music.stop()
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
@@ -457,7 +495,7 @@ while running:
                 game_over()  # Game over when boom is hit 3 times
     # bigboss
     if score_value > 0:
-        if score_value % 50 == 0 and big_boss_state == "ready":
+        if score_value % 20 == 0 and big_boss_state == "ready":
             big_boss_state = "appear"
             big_boss_life = 20  # Reset big_boss_life each time a new big boss appears
             big_bossY = 0
@@ -497,8 +535,10 @@ while running:
                     for i in range(num_of_enemies):
                         enemyY[i] = random.randint(10, 150)
                     bossY = random.randint(10, 150)
-            hpbigboss = font.render("Hp: " + str(big_boss_life), True, (WHITE))
-            screen.blit(hpbigboss, (300, 10))
+            hpbigboss = font.render("Hp: " + str(big_boss_life), True, (RED))
+            bdhpbigboss = font.render("Hp: " + str(big_boss_life), True, (BACK))
+            screen.blit(bdhpbigboss, (353, 558))
+            screen.blit(hpbigboss, (350, 555))
     # Bullet Movement
     if bulletY <= 0:
         bulletY = 500
