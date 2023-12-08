@@ -40,6 +40,11 @@ playerX = 370
 playerY = 500
 playerX_change = 0
 
+
+def player(x, y):
+    screen.blit(playerImg, (x, y))
+
+
 # Score
 score_value = 0
 
@@ -69,6 +74,20 @@ def add_enemy():
         enemyY.append(random.randint(10, 150))
         enemyX_change.append(4)
         enemyY_change.append(40)
+
+
+def enemy(x, y, i):
+    screen.blit(enemyImg[i], (x, y))
+
+
+def isCollision(enemyX, enemyY, bulletX, bulletY):
+    distance = math.sqrt(
+        math.pow(enemyX - bulletX, 2) + (math.pow(enemyY - bulletY, 2))
+    )
+    if distance < 27:
+        return True
+    else:
+        return False
 
 
 # boss
@@ -111,7 +130,7 @@ def big_boss_collision(big_bossX, big_bossY, bulletX, bulletY):
     distance = math.sqrt(
         math.pow(big_bossX - bulletX, 2) + (math.pow(big_bossY - bulletY, 2))
     )
-    if distance < 40:
+    if distance < 45:
         return True
     else:
         return False
@@ -140,7 +159,7 @@ def bocollision(boomX, boomY, bulletX, bulletY):
 
 
 # Bullet
-
+# Speed
 # Ready - You can't see the bullet on the screen
 # Fire - The bullet is currently moving
 
@@ -158,15 +177,23 @@ def speed_bullet():
         bulletY_change += 1
 
 
+def fire_bullet(x, y):
+    global bullet_state
+    bullet_state = "fire"
+    screen.blit(bulletImg, (x + 16, y + 10))
+
+
+# font
 font = pygame.font.Font("Pixeboy-z8XGD.ttf", 50)
 fontp = pygame.font.Font("Pixeboy-z8XGD.ttf", 35)
+over_font = pygame.font.Font("Pixeboy-z8XGD.ttf", 90)
 
-textX = 10
-textY = 10
 # HighScore
 highscore = 0
 
-over_font = pygame.font.Font("Pixeboy-z8XGD.ttf", 90)
+# Score in game
+textX = 10
+textY = 10
 
 
 def show_score(x, y):
@@ -184,33 +211,11 @@ def show_score(x, y):
     screen.blit(score, (400, y))
 
 
-def player(x, y):
-    screen.blit(playerImg, (x, y))
-
-
-def enemy(x, y, i):
-    screen.blit(enemyImg[i], (x, y))
-
-
-def fire_bullet(x, y):
-    global bullet_state
-    bullet_state = "fire"
-    screen.blit(bulletImg, (x + 16, y + 10))
-
-
-def isCollision(enemyX, enemyY, bulletX, bulletY):
-    distance = math.sqrt(
-        math.pow(enemyX - bulletX, 2) + (math.pow(enemyY - bulletY, 2))
-    )
-    if distance < 27:
-        return True
-    else:
-        return False
-
-
 def new_game():
     global running, score_value, playerX_change, num_of_enemies
-    global bossX, bossY, boomX, boomY, boom_state, boom_life, big_bossX, big_bossY, big_boss_life, num_of_enemies
+    global bossX, bossY, boomX, boomY, boom_state, boom_life, big_bossX, big_bossY, big_boss_life
+    global boss_state, big_boss_state
+
     score_value = 0
     playerX_change = 0
     mixer.music.load("audio/background.wav")
@@ -230,6 +235,8 @@ def new_game():
     # Reset bullet state
     bullet_state = "ready"
     boom_state = "ready"
+    boss_state = "ready"
+    big_boss_state = "ready"
     boom_life = 3
     big_boss_life = 20
 
@@ -388,9 +395,7 @@ while running:
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
                 playerX_change = 0
 
-    # 5 = 5 + -0.1 -> 5 = 5 - 0.1
-    # 5 = 5 + 0.1
-
+    # Limit player movement
     playerX += playerX_change
     if playerX <= 0:
         playerX = 0
@@ -405,8 +410,9 @@ while running:
             for j in range(num_of_enemies):
                 enemyY[j] = 3000
             game_over()
-
+        # move
         enemyX[i] += enemyX_change[i]
+        # way of moving
         if enemyX[i] <= 0:
             enemyX_change[i] = 2
             enemyY[i] += enemyY_change[i]
@@ -415,8 +421,8 @@ while running:
             enemyY[i] += enemyY_change[i]
 
         # Collision enemy
-        collision = isCollision(enemyX[i], enemyY[i], bulletX, bulletY)
-        if collision:
+        ecollision = isCollision(enemyX[i], enemyY[i], bulletX, bulletY)
+        if ecollision:
             explosionSound = mixer.Sound("audio/beep.wav")
             explosionSound.play()
             bulletY = 500
@@ -495,7 +501,7 @@ while running:
                 game_over()  # Game over when boom is hit 3 times
     # bigboss
     if score_value > 0:
-        if score_value % 20 == 0 and big_boss_state == "ready":
+        if score_value % 50 == 0 and big_boss_state == "ready":
             big_boss_state = "appear"
             big_boss_life = 20  # Reset big_boss_life each time a new big boss appears
             big_bossY = 0
