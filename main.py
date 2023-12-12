@@ -7,12 +7,23 @@ from pygame import mixer
 # Intialize the pygame
 pygame.init()
 WHITE = (255, 255, 255)
+BACK = (0, 0, 0)
+RED = (205, 85, 85)
 # create the screen
 screen = pygame.display.set_mode((800, 600))
 
 # Background
 background = pygame.image.load("image/background.png")
 
+# Pause Background
+pause_background = pygame.image.load("image/pause.png")
+pause_background = pygame.transform.scale(pause_background, (800, 600))
+
+# Gameover Backgound
+gameover_background = pygame.image.load("image/gameover.png")
+
+# Main Menu Backgound
+mainmenu_background = pygame.image.load("image/mainmenu.png")
 # Sound
 mixer.music.load("audio/background.wav")
 mixer.music.set_volume(0.5)
@@ -28,6 +39,11 @@ playerImg = pygame.image.load("image/player.png")
 playerX = 370
 playerY = 500
 playerX_change = 0
+
+
+def player(x, y):
+    screen.blit(playerImg, (x, y))
+
 
 # Score
 score_value = 0
@@ -60,6 +76,20 @@ def add_enemy():
         enemyY_change.append(40)
 
 
+def enemy(x, y, i):
+    screen.blit(enemyImg[i], (x, y))
+
+
+def isCollision(enemyX, enemyY, bulletX, bulletY):
+    distance = math.sqrt(
+        math.pow(enemyX - bulletX, 2) + (math.pow(enemyY - bulletY, 2))
+    )
+    if distance < 27:
+        return True
+    else:
+        return False
+
+
 # boss
 bossImg = pygame.image.load("image/boss.png")
 bossX = random.randint(0, 730)
@@ -82,6 +112,30 @@ def boss_collision(bossX, bossY, bulletX, bulletY):
         return False
 
 
+# Big Boss
+big_bossImg = pygame.image.load("image/big_boss.png")
+big_bossX = random.randint(0, 730)
+big_bossY = random.randint(10, 150)
+big_bossX_change = 4
+big_bossY_change = 40
+big_boss_state = "ready"  # Set big_boss_state to "ready" initially
+big_boss_life = 20
+
+
+def big_boss(x, y):
+    screen.blit(big_bossImg, (x, y))
+
+
+def big_boss_collision(big_bossX, big_bossY, bulletX, bulletY):
+    distance = math.sqrt(
+        math.pow(big_bossX - bulletX, 2) + (math.pow(big_bossY - bulletY, 2))
+    )
+    if distance < 45:
+        return True
+    else:
+        return False
+
+
 # Boom
 boomImg = pygame.image.load("image/boom.png")  # Load an image for the boom
 boomX = random.randint(0, 730)
@@ -98,14 +152,14 @@ def boom(x, y):
 
 def bocollision(boomX, boomY, bulletX, bulletY):
     distance = math.sqrt(math.pow(boomX - bulletX, 2) + (math.pow(boomY - bulletY, 2)))
-    if distance < 35:
+    if distance < 30:
         return True
     else:
         return False
 
 
 # Bullet
-
+# Speed
 # Ready - You can't see the bullet on the screen
 # Fire - The bullet is currently moving
 
@@ -123,59 +177,51 @@ def speed_bullet():
         bulletY_change += 1
 
 
-font = pygame.font.Font("freesansbold.ttf", 32)
-fontp = pygame.font.Font("freesansbold.ttf", 20)
-
-textX = 10
-textY = 10
-# HighScore
-highscore = 0
-
-over_font = pygame.font.Font("freesansbold.ttf", 64)
-
-
-def show_score(x, y):
-    pause = fontp.render("Pause : P", True, (WHITE))
-    screen.blit(pause, (x, 45))
-    score = font.render("Score : " + str(score_value), True, (WHITE))
-    screen.blit(score, (x, y))
-    score = font.render("High Score : " + str(highscore), True, (WHITE))
-    screen.blit(score, (500, y))
-
-
-def player(x, y):
-    screen.blit(playerImg, (x, y))
-
-
-def enemy(x, y, i):
-    screen.blit(enemyImg[i], (x, y))
-
-
 def fire_bullet(x, y):
     global bullet_state
     bullet_state = "fire"
     screen.blit(bulletImg, (x + 16, y + 10))
 
 
-def isCollision(enemyX, enemyY, bulletX, bulletY):
-    distance = math.sqrt(
-        math.pow(enemyX - bulletX, 2) + (math.pow(enemyY - bulletY, 2))
-    )
-    if distance < 27:
-        return True
-    else:
-        return False
+# font
+font = pygame.font.Font("Pixeboy-z8XGD.ttf", 50)
+fontp = pygame.font.Font("Pixeboy-z8XGD.ttf", 35)
+over_font = pygame.font.Font("Pixeboy-z8XGD.ttf", 90)
+
+# HighScore
+highscore = 0
+
+# Score in game
+textX = 10
+textY = 10
+
+
+def show_score(x, y):
+    pause = fontp.render("Pause : P", True, (WHITE))
+    bdpause = fontp.render("Pause : P", True, (BACK))
+    screen.blit(bdpause, (x + 3, 47))
+    screen.blit(pause, (x, 45))
+    score = font.render("Score : " + str(score_value), True, (WHITE))
+    bdscore = font.render("Score : " + str(score_value), True, (BACK))
+    screen.blit(bdscore, (x + 3, y + 3))
+    screen.blit(score, (x, y))
+    score = font.render("High Score : " + str(highscore), True, (WHITE))
+    bdscore = font.render("High Score : " + str(highscore), True, (BACK))
+    screen.blit(bdscore, (403, y + 3))
+    screen.blit(score, (400, y))
 
 
 def new_game():
-    global running, score_value, playerX_change, num_of_enemies, bossX, bossY, boomX, boomY, boom_state, boom_life
+    global running, score_value, playerX_change, num_of_enemies
+    global bossX, bossY, boomX, boomY, boom_state, boom_life, big_bossX, big_bossY, big_boss_life
+    global boss_state, big_boss_state
 
     score_value = 0
     playerX_change = 0
     mixer.music.load("audio/background.wav")
     mixer.music.play(-1)
     mixer.music.set_volume(0.5)
-
+    num_of_enemies = 7
     # Reset enemy positions
     for i in range(num_of_enemies):
         enemyX[i] = random.randint(0, 730)
@@ -184,10 +230,15 @@ def new_game():
     bossY = random.randint(10, 150)
     boomX = random.randint(0, 730)
     boomY = random.randint(10, 150)
+    big_bossX = random.randint(0, 730)
+    big_bossY = random.randint(10, 150)
     # Reset bullet state
     bullet_state = "ready"
     boom_state = "ready"
+    boss_state = "ready"
+    big_boss_state = "ready"
     boom_life = 3
+    big_boss_life = 20
 
     running = True
 
@@ -195,19 +246,23 @@ def new_game():
 def game_start():
     playSound = mixer.Sound("audio/intro.wav")
     playSound.play(-1)
-    global running
+    global running, mainmenu_background
     start = True
     while start:
-        background = pygame.image.load("image/background.png")
-        screen.fill((0, 0, 0))
-        # Background Image
-        screen.blit(background, (0, 0))
+        # Blit the main menu background image
+        screen.blit(mainmenu_background, (0, 0))
         namegame = over_font.render("Space Invaders", True, (WHITE))
-        screen.blit(namegame, (165, 150))
+        bdnamegame = over_font.render("Space Invaders", True, (BACK))
+        screen.blit(bdnamegame, (123, 173))
+        screen.blit(namegame, (120, 170))
         resume = font.render("Start: S", True, (WHITE))
-        screen.blit(resume, (335, 250))
+        bdresume = font.render("Start: S", True, (BACK))
+        screen.blit(bdresume, (323, 253))
+        screen.blit(resume, (320, 250))
         exitgame = font.render("Exit Game: ESC", True, (WHITE))
-        screen.blit(exitgame, (270, 300))
+        bdexitgame = font.render("Exit Game: ESC", True, (BACK))
+        screen.blit(bdexitgame, (263, 313))
+        screen.blit(exitgame, (260, 310))
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
@@ -227,15 +282,23 @@ def game_start():
 
 
 def game_pause():
-    global running
+    global running, pause_background
     paused = True
     while paused:
-        resume = font.render("Resume : P", True, (WHITE))
-        screen.blit(resume, (320, 200))
-        newgame = font.render("New Game : X", True, (WHITE))
+        # Blit the pause background image
+        screen.blit(pause_background, (0, 0))
+        resume = font.render("Resume: P", True, (WHITE))
+        bdresume = font.render("Resume: P", True, (BACK))
+        screen.blit(bdresume, (313, 203))
+        screen.blit(resume, (310, 200))
+        newgame = font.render("New Game: X", True, (WHITE))
+        bdnewgame = font.render("New Game: X", True, (BACK))
+        screen.blit(bdnewgame, (303, 303))
         screen.blit(newgame, (300, 300))
-        exitgame = font.render("Exit Game : ESC", True, (WHITE))
-        screen.blit(exitgame, (280, 400))
+        exitgame = font.render("Exit Game: ESC", True, (WHITE))
+        bdexitgame = font.render("Exit Game: ESC", True, (BACK))
+        screen.blit(bdexitgame, (263, 403))
+        screen.blit(exitgame, (260, 400))
         pygame.mixer.music.stop()
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
@@ -263,15 +326,24 @@ def game_over():
     overSound = mixer.Sound("audio/gameover.wav")
     pygame.time.delay(1500)
     overSound.play()
-    global running
+    global running, gameover_background
     over = True
     while over:
+        screen.blit(gameover_background, (0, 0))
         over_text = over_font.render("GAME OVER", True, (WHITE))
-        screen.blit(over_text, (200, 150))
+        bdover_text = over_font.render("GAME OVER", True, (BACK))
+        screen.blit(bdover_text, (243, 143))
+        screen.blit(over_text, (240, 140))
         over_text = font.render("Press the 'X' key to start again", True, (WHITE))
-        screen.blit(over_text, (170, 320))
-        over_text = font.render("High Score: " + str(highscore), True, (WHITE))
-        screen.blit(over_text, (285, 240))
+        bdover_text = font.render("Press the 'X' key to start again", True, (BACK))
+        screen.blit(bdover_text, (103, 323))
+        screen.blit(over_text, (100, 320))
+        over_text = font.render("High Score: " + str(highscore), True, (RED))
+        bdovertext = font.render("High Score: " + str(highscore), True, (WHITE))
+        bdover_text = font.render("High Score: " + str(highscore), True, (BACK))
+        screen.blit(bdover_text, (283, 243))
+        screen.blit(bdovertext, (281, 241))
+        screen.blit(over_text, (280, 240))
         pygame.mixer.music.stop()
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
@@ -323,9 +395,7 @@ while running:
             if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:
                 playerX_change = 0
 
-    # 5 = 5 + -0.1 -> 5 = 5 - 0.1
-    # 5 = 5 + 0.1
-
+    # Limit player movement
     playerX += playerX_change
     if playerX <= 0:
         playerX = 0
@@ -336,12 +406,13 @@ while running:
 
     for i in range(num_of_enemies):
         # Game Over
-        if enemyY[i] > 465:
+        if enemyY[i] > 465 and enemyY[i] < 1000:
             for j in range(num_of_enemies):
                 enemyY[j] = 3000
             game_over()
-
+        # move
         enemyX[i] += enemyX_change[i]
+        # way of moving
         if enemyX[i] <= 0:
             enemyX_change[i] = 2
             enemyY[i] += enemyY_change[i]
@@ -349,9 +420,9 @@ while running:
             enemyX_change[i] = -2
             enemyY[i] += enemyY_change[i]
 
-        # Collision
-        collision = isCollision(enemyX[i], enemyY[i], bulletX, bulletY)
-        if collision:
+        # Collision enemy
+        ecollision = isCollision(enemyX[i], enemyY[i], bulletX, bulletY)
+        if ecollision:
             explosionSound = mixer.Sound("audio/beep.wav")
             explosionSound.play()
             bulletY = 500
@@ -365,37 +436,38 @@ while running:
             speed_bullet()
 
         enemy(enemyX[i], enemyY[i], i)
+    # boss
+    if score_value > 0:
+        if score_value % 5 == 0 and boss_state == "ready":
+            boss_state = "appear"
+            boss_life = 3  # Reset boss_life each time a new boss appears
+            bossY = 0
+        if bossY > 465 and bossY < 1000:
+            game_over()
+        if boss_state == "appear":
+            boss(bossX, bossY)
+            bossX += bossX_change
+            if bossX <= 0:
+                bossX_change = 2
+                bossY += bossY_change
+            elif bossX >= 730:
+                bossX_change = -2
+                bossY += bossY_change
 
-    if score_value % 15 == 0 and boss_state == "ready":
-        boss_state = "appear"
-        boss_life = 3  # Reset boss_life each time a new boss appears
-        bossY = 0
-    if bossY > 465:
-        bossY = 2000
-        game_over()
-    if boss_state == "appear":
-        boss(bossX, bossY)
-        bossX += bossX_change
-        if bossX <= 0:
-            bossX_change = 2
-            bossY += bossY_change
-        elif bossX >= 730:
-            bossX_change = -2
-            bossY += bossY_change
-
-        # Check for collision with boss
-        boss_collision = isCollision(bossX, bossY, bulletX, bulletY)
-        if boss_collision:
-            explosionSound = mixer.Sound("audio/beep.wav")
-            explosionSound.play()
-            bulletY = 500
-            bullet_state = "ready"
-            boss_life -= 1
-            if boss_life == 0:
-                score_value += 5
-                boss_state = "ready"
-                if score_value > highscore:
-                    highscore = score_value
+            # Check for collision with boss
+            boss_collision = isCollision(bossX, bossY, bulletX, bulletY)
+            if boss_collision:
+                explosionSound = mixer.Sound("audio/beep.wav")
+                explosionSound.play()
+                bulletY = 500
+                bullet_state = "ready"
+                boss_life -= 1
+                if boss_life == 0:
+                    score_value += 5
+                    boss_state = "ready"
+                    if score_value > highscore:
+                        highscore = score_value
+    # boom
     if score_value > 0:
         if score_value % 10 == 0 and boom_state == "ready":
             boom_state = "appear"
@@ -427,6 +499,52 @@ while running:
             boom_life -= 1
             if boom_life == 0:
                 game_over()  # Game over when boom is hit 3 times
+    # bigboss
+    if score_value > 0:
+        if score_value % 50 == 0 and big_boss_state == "ready":
+            big_boss_state = "appear"
+            big_boss_life = 20  # Reset big_boss_life each time a new big boss appears
+            big_bossY = 0
+            # Make all enemies and small boss disappear
+            for i in range(num_of_enemies):
+                enemyY[i] = 2000
+            bossY = 2000
+        if big_bossY > 465 and big_bossY < 1000:
+            score_value = 0
+            game_over()
+        if big_boss_state == "appear":
+            big_boss(big_bossX, big_bossY)
+            big_bossX += big_bossX_change
+            if big_bossX <= 0:
+                big_bossX_change = 2
+                big_bossY += big_bossY_change
+            elif big_bossX >= 730:
+                big_bossX_change = -2
+                big_bossY += big_bossY_change
+
+            # Check for collision with big boss
+            bigbosscollision = big_boss_collision(
+                big_bossX, big_bossY, bulletX, bulletY
+            )
+            if bigbosscollision:
+                explosionSound = mixer.Sound("audio/beep.wav")
+                explosionSound.play()
+                bulletY = 500
+                bullet_state = "ready"
+                big_boss_life -= 1
+                if big_boss_life == 0:
+                    score_value += 15
+                    big_boss_state = "ready"
+                    if score_value > highscore:
+                        highscore = score_value
+                    # Make all enemies and small boss appear again
+                    for i in range(num_of_enemies):
+                        enemyY[i] = random.randint(10, 150)
+                    bossY = random.randint(10, 150)
+            hpbigboss = font.render("Hp: " + str(big_boss_life), True, (RED))
+            bdhpbigboss = font.render("Hp: " + str(big_boss_life), True, (BACK))
+            screen.blit(bdhpbigboss, (353, 558))
+            screen.blit(hpbigboss, (350, 555))
     # Bullet Movement
     if bulletY <= 0:
         bulletY = 500
